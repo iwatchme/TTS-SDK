@@ -1,7 +1,44 @@
+import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
+
 plugins {
-    id("com.android.library")
-    kotlin("android")
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.atomicfu)
     `maven-publish`
+}
+
+kotlin {
+    androidTarget {
+        compilations.all {
+            kotlinOptions.jvmTarget = "17"
+        }
+        publishLibraryVariants("release")
+    }
+
+    jvm()
+
+    val xcf = XCFramework("TtsCore")
+
+    listOf(iosArm64(), iosSimulatorArm64()).forEach { target ->
+        target.binaries.framework {
+            baseName = "TtsCore"
+            xcf.add(this)
+        }
+    }
+
+    applyDefaultHierarchyTemplate()
+
+    sourceSets {
+        commonMain.dependencies {
+            api(libs.kotlinx.coroutines.core)
+            implementation(libs.okio)
+        }
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.okio.fakefilesystem)
+        }
+    }
 }
 
 android {
@@ -17,32 +54,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-
     testOptions {
         unitTests.isReturnDefaultValues = true
-    }
-}
-
-dependencies {
-    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
-
-    testImplementation(kotlin("test"))
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
-    testImplementation("org.assertj:assertj-core:3.25.1")
-}
-
-afterEvaluate {
-    publishing {
-        publications {
-            create<MavenPublication>("release") {
-                from(components["release"])
-                groupId = project.group.toString()
-                artifactId = "tts-core"
-                version = project.version.toString()
-            }
-        }
     }
 }

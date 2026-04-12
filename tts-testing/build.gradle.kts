@@ -1,27 +1,24 @@
 plugins {
-    kotlin("jvm")
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.atomicfu)
     `maven-publish`
 }
 
-dependencies {
-    api(project(":tts-core"))
+kotlin {
+    jvm()
+    iosArm64()
+    iosSimulatorArm64()
 
-    testImplementation(kotlin("test"))
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
-    testImplementation("org.assertj:assertj-core:3.25.1")
-}
+    applyDefaultHierarchyTemplate()
 
-tasks.test {
-    useJUnitPlatform()
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            from(components["java"])
-            groupId = project.group.toString()
-            artifactId = "tts-testing"
-            version = project.version.toString()
+    sourceSets {
+        commonMain.dependencies {
+            api(project(":tts-core"))
+        }
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.okio.fakefilesystem)
         }
     }
 }

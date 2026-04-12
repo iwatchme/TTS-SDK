@@ -1,28 +1,34 @@
+import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
+
 plugins {
-    kotlin("jvm")
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.atomicfu)
     `maven-publish`
 }
 
-dependencies {
-    api(project(":tts-core"))
-    testImplementation(project(":tts-testing"))
+kotlin {
+    jvm()
 
-    testImplementation(kotlin("test"))
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
-    testImplementation("org.assertj:assertj-core:3.25.1")
-}
+    val xcf = XCFramework("TtsSdk")
 
-tasks.test {
-    useJUnitPlatform()
-}
+    listOf(iosArm64(), iosSimulatorArm64()).forEach { target ->
+        target.binaries.framework {
+            baseName = "TtsSdk"
+            export(project(":tts-core"))
+            xcf.add(this)
+        }
+    }
 
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            from(components["java"])
-            groupId = project.group.toString()
-            artifactId = "tts-player"
-            version = project.version.toString()
+    applyDefaultHierarchyTemplate()
+
+    sourceSets {
+        commonMain.dependencies {
+            api(project(":tts-core"))
+        }
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(project(":tts-testing"))
         }
     }
 }

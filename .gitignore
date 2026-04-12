@@ -10,3 +10,4 @@ local.properties
 *.apk
 *.jar
 !gradle/wrapper/gradle-wrapper.jar
+.kotlin
